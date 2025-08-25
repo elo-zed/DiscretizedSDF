@@ -9,7 +9,7 @@ This repository contains the official implementation of the following paper:
 
 [[Paper](https://arxiv.org/abs/2507.15629)]
 [[Project Page](https://nk-cs-zzl.github.io/projects/dsdf/index.html)]
-[Video (TBD)]
+[[Video](https://youtu.be/c6lYx3Q5mGI)]
 
 DiscretizedSDF is an **efficient, robust** solution for object relighting, aiming to produce decent **decompositions of geometry, material, and lighting** for **multi-view observations**.
 

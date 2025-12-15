@@ -27,11 +27,11 @@ from fused_ssim import fused_ssim
 from argparse import ArgumentParser, Namespace
 from arguments import ModelParams, PipelineParams, OptimizationParams
 from render import render_set
-try:
-    from torch.utils.tensorboard import SummaryWriter
-    TENSORBOARD_FOUND = True
-except ImportError:
-    TENSORBOARD_FOUND = False
+# try:
+#     # from torch.utils.tensorboard import SummaryWriter
+#     TENSORBOARD_FOUND = True
+# except ImportError:
+TENSORBOARD_FOUND = False
 
 def training(dataset, opt, pipe, testing_iterations, saving_iterations, load_iteration):
     render_fn = RENDER_DICT[pipe.gaussian_type]

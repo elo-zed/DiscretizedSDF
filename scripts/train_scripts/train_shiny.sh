@@ -1,7 +1,8 @@
 #!/bin/bash
 
-root_dir="data/shiny_blender/"
-list="helmet teapot toaster coffee ball car"
+root_dir="/kaggle/working/data/refnerf/"
+list="helmet" # teapot toaster coffee ball car"
+
 
 for i in $list; do
 

@@ -143,7 +143,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, load_ite
         #loss.backward()
         iter_end = time()
         
-        scene.gaussians._roughness.grad[scene.gaussians._roughness.grad.isnan()] = 0.0
+        # scene.gaussians._roughness.grad[scene.gaussians._roughness.grad.isnan()] = 0.0
 
         with torch.no_grad():
             # Progress bar

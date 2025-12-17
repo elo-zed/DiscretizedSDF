@@ -1,0 +1,6 @@
+# 强制所有.sh脚本使用LF换行（仓库中LF，checkout时也保持LF，即使在Windows上）
+*.sh text eol=lf
+
+# 可选：如果有其他脚本（如Python、Dockerfile等需要LF）
+*.py text eol=lf
+Dockerfile text eol=lf

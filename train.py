@@ -42,7 +42,7 @@ def training(dataset, opt, pipe, testing_iterations, saving_iterations, load_ite
         scene = Scene(dataset, gaussians, load_iteration=load_iteration)
     else:
         scene = Scene(dataset, gaussians)
-    gaussians.training_setup(opt, scene)
+    gaussians.training_setup(opt, scene) # 设置 lr
     
     bg_color = [1, 1, 1] if dataset.white_background else [0, 0, 0]
     background = torch.tensor(bg_color, dtype=torch.float32, device="cuda")

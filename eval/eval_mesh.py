@@ -176,14 +176,14 @@ def preprocess_mesh(data_pcd):
     return data_down
 
 scenes = ['car', 'coffee', 'helmet', 'toaster']
-
+scenes = ['helmet']
 for scene in scenes:
-    gt_mesh = o3d.io.read_triangle_mesh(f'data1/ShinyBlender_eval/{scene}/points_of_interest.ply')
+    gt_mesh = o3d.io.read_triangle_mesh(f'/kaggle/working/data/ShinyBlender_eval/{scene}/points_of_interest.ply')
 
     gt_pcd = np.asarray(gt_mesh.vertices)
     print(np.asarray(gt_mesh.vertices).shape)
     gt_pcd = torch.from_numpy(gt_pcd).unsqueeze(0).float()
-    out_mesh = o3d.io.read_triangle_mesh(f'output/shiny/{scene}/meshes/fuse_post.ply')
+    out_mesh = o3d.io.read_triangle_mesh(f'/kaggle/working/DiscretizedSDF/outputs/shiny/{scene}/meshes/fuse_post.ply')
     out_pcd = torch.from_numpy(np.asarray(out_mesh.vertices)).unsqueeze(0).float()
 
     chamferDist = ChamferDistance()

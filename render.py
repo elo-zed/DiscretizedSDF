@@ -85,7 +85,7 @@ def render_sets(dataset : ModelParams, iteration : int, pipeline : PipelineParam
         if not skip_test:
              render_set(dataset.model_path, "test", scene.loaded_iter, scene.getTestCameras(), scene, pipeline, background)
 
-        render_lightings(dataset.model_path, "lighting", scene.loaded_iter, scene, sample_num=1)
+        # render_lightings(dataset.model_path, "lighting", scene.loaded_iter, scene, sample_num=1)
 
 if __name__ == "__main__":
     # Set up command line argument parser
@@ -98,6 +98,7 @@ if __name__ == "__main__":
     parser.add_argument("--quiet", action="store_true")
     parser.add_argument("--interpolate", type=int, default=0)
     args = get_combined_args(parser)
+    args.model_path = "/kaggle/working/data/shiny/helmet/"
     print("Rendering " + args.model_path)
 
     # Initialize system state (RNG)

@@ -29,8 +29,10 @@ __device__ inline void bwdLambert(const vec3f nrm, const vec3f wi, vec3f& d_nrm,
 }
 
 //------------------------------------------------------------------------
-// Fresnel Schlick 
-
+// Fresnel Schlick  菲涅耳-施利克
+// 菲涅耳方程（Fresnel Equations）
+// Schlick 近似（Schlick's Approximation），
+// 是用来近似**菲涅耳方程（Fresnel Equations）**的一种数学模型
 __device__ inline float fwdFresnelSchlick(const float f0, const float f90, const float cosTheta)
 {
     float _cosTheta = clamp(cosTheta, SPECULAR_EPSILON, 1.0f - SPECULAR_EPSILON);
@@ -71,7 +73,8 @@ __device__ inline void bwdFresnelSchlick(const vec3f f0, const vec3f f90, const 
 
 //------------------------------------------------------------------------
 // Frostbite diffuse
-
+// “Frostbite diffuse” 
+// 它是指该引擎在基于物理的渲染 (PBR) 管线中所使用的漫反射（Diffuse）光照模型
 __device__ inline float fwdFrostbiteDiffuse(const vec3f nrm, const vec3f wi, const vec3f wo, float linearRoughness)
 {
     float wiDotN = dot(wi, nrm);
@@ -153,7 +156,8 @@ __device__ inline void bwdFrostbiteDiffuse(const vec3f nrm, const vec3f wi, cons
 
 //------------------------------------------------------------------------
 // Ndf GGX
-
+// NDF：Normal Distribution Function（法线分布函数）
+// GGX，正式名称为 Trowbridge-Reitz 分布，在 PBR 中最常用和最流行的法线分布函数。
 __device__ inline float fwdNdfGGX(const float alphaSqr, const float cosTheta)
 {
     float _cosTheta = clamp(cosTheta, SPECULAR_EPSILON, 1.0f - SPECULAR_EPSILON);
@@ -175,7 +179,8 @@ __device__ inline void bwdNdfGGX(const float alphaSqr, const float cosTheta, flo
 
 //------------------------------------------------------------------------
 // Lambda GGX
-
+// $\Lambda_{GGX}$ 指代的是 Smith-GGX 几何衰减函数中的一个中间量，
+// 用于计算微表面遮蔽 (Shadowing) 和掩蔽 (Masking) 的概率
 __device__ inline float fwdLambdaGGX(const float alphaSqr, const float cosTheta)
 {
     float _cosTheta = clamp(cosTheta, SPECULAR_EPSILON, 1.0f - SPECULAR_EPSILON);

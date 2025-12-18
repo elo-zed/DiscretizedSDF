@@ -273,6 +273,10 @@ renderCUDA(
 	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	uint32_t pix_id = W * pix.y + pix.x;
 	float2 pixf = { (float)pix.x, (float)pix.y};
+	// int id = blockIdx.x * blockDim.x + threadIdx.x;
+	// if (id == 0) {
+    //     printf("Hello from CUDA! id = %d\n", id);
+    // }
 	// if (blockIdx.x == 0 && threadIdx.x == 0) {
     //     printf("-----  renderCUDA -----\n");
     // }

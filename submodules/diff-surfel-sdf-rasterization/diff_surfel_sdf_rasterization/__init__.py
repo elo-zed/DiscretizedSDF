@@ -94,21 +94,6 @@ class _RasterizeGaussians(torch.autograd.Function):
                 raise ex
         else:
             num_rendered, color, depth, radii, geomBuffer, binningBuffer, imgBuffer, gs_per_pixel, weight_per_gs_pixel, x_mu = _C.rasterize_gaussians(*args)
-
-        import os
-        save_dir = "/kaggle/working/DiscretizedSDF/"
-        save_path = os.path.join(save_dir, "gs_debug_tensors.pt")
-
-        torch.save(
-            {
-                "gs_per_pixel": gs_per_pixel.detach().cpu(),
-                "weight_per_gs_pixel": weight_per_gs_pixel.detach().cpu(),
-                "x_mu": x_mu.detach().cpu(),
-            },
-            save_path
-        )
-        print("down datas!-- ",save_path)
-        # exit()
         # Keep relevant tensors for backward
         ctx.raster_settings = raster_settings
         ctx.num_rendered = num_rendered

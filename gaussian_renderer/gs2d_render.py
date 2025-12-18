@@ -123,7 +123,7 @@ def defer_render(viewpoint_camera, scene, pipe, bg_color : torch.Tensor,
     render_extras = torch.cat(render_extras, -1)
     
     out_extras = {}
-    out_extras['pos'], radii, allmap = rasterizer(
+    out_extras['pos'], radii, allmap,gs_per_pixel, weight_per_gs_pixel, x_mu  = rasterizer(
         means3D = means3D,
         means2D = means2D,
         shs = None,
@@ -134,6 +134,21 @@ def defer_render(viewpoint_camera, scene, pipe, bg_color : torch.Tensor,
         pbr_params = render_extras,
         cov3D_precomp = cov3D_precomp)
     
+    import os
+    save_dir = "/kaggle/working/DiscretizedSDF/"
+    save_path = os.path.join(save_dir, "gs_debug_tensors.pt")
+
+    torch.save(
+        {
+            "gs_per_pixel": gs_per_pixel.detach().cpu(),
+            "weight_per_gs_pixel": weight_per_gs_pixel.detach().cpu(),
+            "x_mu": x_mu.detach().cpu(),
+        },
+        save_path
+    )
+    print("down datas!-- ",save_path)
+    exit()
+
     out_extras["alpha"] = alpha = allmap[1:2]
 
     # get normal map

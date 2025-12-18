@@ -218,6 +218,9 @@ int CudaRasterizer::Rasterizer::forward(
 	const bool prefiltered,
 	float* out_color,
 	float* out_others,
+	float* gs_per_pixel,
+	float* weight_per_gs_pixel,
+	float* x_mu,
 	int* radii,
 	bool debug)
 {
@@ -338,7 +341,10 @@ int CudaRasterizer::Rasterizer::forward(
 		imgState.n_contrib,
 		background,
 		out_color,
-		out_others), debug)
+		out_others,
+		gs_per_pixel,
+		weight_per_gs_pixel,
+		x_mu), debug)
 
 	return num_rendered;
 }

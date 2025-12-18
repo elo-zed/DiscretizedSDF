@@ -13,7 +13,9 @@ from setuptools import setup
 from torch.utils.cpp_extension import CUDAExtension, BuildExtension
 import os
 os.path.dirname(os.path.abspath(__file__))
-
+# python setup.py build_ext --inplace
+# build_ext：构建扩展模块 (Extension Modules)
+# --inplace/-i：将编译好的扩展模块直接放置在源代码目录中
 setup(
     name="diff_surfel_sdf_rasterization",
     packages=['diff_surfel_sdf_rasterization'],

@@ -66,7 +66,11 @@ namespace FORWARD
 		uint32_t* n_contrib,
 		const float* bg_color,
 		float* out_color,
-		float* out_others);
+		float* out_others,
+		float* gs_per_pixel,
+		float* weight_per_gs_pixel,
+		float* x_mu
+	);
 }
 
 

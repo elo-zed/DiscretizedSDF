@@ -75,6 +75,7 @@ __device__ glm::vec3 computeColorFromSH(int idx, int deg, int max_coeffs, const 
 __device__ void compute_transmat(
 	const float3& p_orig,
 	const glm::vec2 scale,
+	float mod,
 	const glm::vec4 rot,
 	const float* projmatrix,
 	const float* viewmatrix,
@@ -85,14 +86,14 @@ __device__ void compute_transmat(
 ) {
 
 	glm::mat3 R = quat_to_rotmat(rot);
-	glm::mat3 S = scale_to_mat(scale, 1.0f);
+	glm::mat3 S = scale_to_mat(scale, mod);
 	glm::mat3 L = R * S;
 
 	// center of Gaussians in the camera coordinate
-	glm::mat3x4 splat2world = glm::mat3x4(
+	glm::mat3x4 splat2world = glm::mat3x4( // 3行4列矩阵
 		glm::vec4(L[0], 0.0),
 		glm::vec4(L[1], 0.0),
-		glm::vec4(p_orig.x, p_orig.y, p_orig.z, 1)
+		glm::vec4(p_orig.x, p_orig.y, p_orig.z, 1) // 
 	);
 
 	glm::mat4 world2ndc = glm::mat4(
@@ -109,42 +110,37 @@ __device__ void compute_transmat(
 	);
 
 	T = glm::transpose(splat2world) * world2ndc * ndc2pix;
-	normal = transformVec4x3({L[2].x, L[2].y, L[2].z}, viewmatrix);
+	normal = transformVec4x3({L[2].x, L[2].y, L[2].z}, viewmatrix);// 变成相机坐标
 
-#if DUAL_VISIABLE
-	float multiplier = normal.z < 0 ? 1: -1;
-	normal = multiplier * normal;
-#endif
 }
 
 // Computing the bounding box of the 2D Gaussian and its center
 // The center of the bounding box is used to create a low pass filter
 __device__ bool compute_aabb(
 	glm::mat3 T, 
+	float cutoff,
 	float2& point_image,
-	float2 & extent
+	float2& extent
 ) {
-	float3 T0 = {T[0][0], T[0][1], T[0][2]};
-	float3 T1 = {T[1][0], T[1][1], T[1][2]};
-	float3 T3 = {T[2][0], T[2][1], T[2][2]};
+	glm::vec3 t = glm::vec3(cutoff * cutoff, cutoff * cutoff, -1.0f);
+	float d = glm::dot(t, T[2] * T[2]);
+	if (d == 0.0) return false;
+	glm::vec3 f = (1 / d) * t;
 
-	// Compute AABB
-	float3 temp_point = {1.0f, 1.0f, -1.0f};
-	float distance = sumf3(T3 * T3 * temp_point);
-	float3 f = (1 / distance) * temp_point;
-	if (distance == 0.0) return false;
+	glm::vec2 p = glm::vec2(
+		glm::dot(f, T[0] * T[2]),
+		glm::dot(f, T[1] * T[2])
+	);
 
-	point_image = {
-		sumf3(f * T0 * T3),
-		sumf3(f * T1 * T3)
-	};  
-	
-	float2 temp = {
-		sumf3(f * T0 * T0),
-		sumf3(f * T1 * T1)
-	};
-	float2 half_extend = point_image * point_image - temp;
-	extent = sqrtf2(maxf2(1e-4, half_extend));
+	glm::vec2 h0 = p * p - 
+		glm::vec2(
+			glm::dot(f, T[0] * T[0]),
+			glm::dot(f, T[1] * T[1])
+		);
+
+	glm::vec2 h = sqrt(max(glm::vec2(1e-4, 1e-4), h0));
+	point_image = {p.x, p.y};
+	extent = {h.x, h.y};
 	return true;
 }
 
@@ -160,7 +156,7 @@ __global__ void preprocessCUDA(int P, int D, int M,
 	bool* clamped,
 	const float* transMat_precomp,
 	const float* colors_precomp,
-	const float* viewmatrix,
+	const float* viewmatrix, // 视图矩阵（4x4 矩阵），将世界坐标转换为相机坐标
 	const float* projmatrix,
 	const glm::vec3* cam_pos,
 	const int W, int H,
@@ -195,7 +191,7 @@ __global__ void preprocessCUDA(int P, int D, int M,
 	float3 normal;
 	if (transMat_precomp == nullptr)
 	{
-		compute_transmat(((float3*)orig_points)[idx], scales[idx], rotations[idx], projmatrix, viewmatrix, W, H, T, normal);
+		compute_transmat(((float3*)orig_points)[idx], scales[idx], scale_modifier, rotations[idx], projmatrix, viewmatrix, W, H, T, normal);
 		float3 *T_ptr = (float3*)transMats;
 		T_ptr[idx * 3 + 0] = {T[0][0], T[0][1], T[0][2]};
 		T_ptr[idx * 3 + 1] = {T[1][0], T[1][1], T[1][2]};
@@ -210,14 +206,28 @@ __global__ void preprocessCUDA(int P, int D, int M,
 		normal = make_float3(0.0, 0.0, 1.0);
 	}
 
+#if DUAL_VISIABLE
+	float cos = -sumf3(p_view * normal);
+	if (cos == 0) return;
+	float multiplier = cos > 0 ? 1: -1;
+	normal = multiplier * normal;
+#endif
+
+#if TIGHTBBOX // no use in the paper, but it indeed help speeds.
+	// the effective extent is now depended on the opacity of gaussian.
+	float cutoff = sqrtf(max(9.f + 2.f * logf(opacities[idx]), 0.000001));
+#else
+	float cutoff = 3.0f;
+#endif
+
 	// Compute center and radius
 	float2 point_image;
 	float radius;
 	{
 		float2 extent;
-		bool ok = compute_aabb(T, point_image, extent);
+		bool ok = compute_aabb(T, cutoff, point_image, extent);
 		if (!ok) return;
-		radius = 3.0f * ceil(max(extent.x, extent.y));
+		radius = ceil(max(max(extent.x, extent.y), cutoff * FilterSize));
 	}
 
 	uint2 rect_min, rect_max;
@@ -252,7 +262,6 @@ renderCUDA(
 	float focal_x, float focal_y,
 	const float2* __restrict__ points_xy_image,
 	const float* __restrict__ features,
-	const float* __restrict__ pbr_params,
 	const float* __restrict__ transMats,
 	const float* __restrict__ depths,
 	const float4* __restrict__ normal_opacity,
@@ -260,10 +269,7 @@ renderCUDA(
 	uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
-	float* __restrict__ out_others,
-	float* __restrict__ gs_per_pixel,
-	float* __restrict__ weight_per_gs_pixel,
-	float* __restrict__ x_mu)
+	float* __restrict__ out_others)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -296,7 +302,7 @@ renderCUDA(
 	float T = 1.0f;
 	uint32_t contributor = 0;
 	uint32_t last_contributor = 0;
-	float C[CHANNELS] = { 0 }, F[PBR_LEN] = {0};
+	float C[CHANNELS] = { 0 };
 
 
 #if RENDER_AXUTILITY
@@ -307,6 +313,7 @@ renderCUDA(
 	float M2 = {0};
 	float distortion = {0};
 	float median_depth = {0};
+	// float median_weight = {0};
 	float median_contributor = {-1};
 
 #endif
@@ -332,7 +339,7 @@ renderCUDA(
 			collected_Tw[block.thread_rank()] = {transMats[9 * coll_id+6], transMats[9 * coll_id+7], transMats[9 * coll_id+8]};
 		}
 		block.sync();
-		uint32_t calc = 0;
+
 		// Iterate over current batch
 		for (int j = 0; !done && j < min(BLOCK_SIZE, toDo); j++)
 		{
@@ -344,19 +351,26 @@ renderCUDA(
 			const float3 Tu = collected_Tu[j];
 			const float3 Tv = collected_Tv[j];
 			const float3 Tw = collected_Tw[j];
+			// Transform the two planes into local u-v system. 
 			float3 k = pix.x * Tw - Tu;
 			float3 l = pix.y * Tw - Tv;
+			// Cross product of two planes is a line, Eq. (9)
 			float3 p = cross(k, l);
 			if (p.z == 0.0) continue;
+			// Perspective division to get the intersection (u,v), Eq. (10)
 			float2 s = {p.x / p.z, p.y / p.z};
 			float rho3d = (s.x * s.x + s.y * s.y); 
+			// Add low pass filter
 			float2 d = {xy.x - pixf.x, xy.y - pixf.y};
 			float rho2d = FilterInvSquare * (d.x * d.x + d.y * d.y); 
-
-			// compute intersection and depth
 			float rho = min(rho3d, rho2d);
-			float depth = (rho3d <= rho2d) ? (s.x * Tw.x + s.y * Tw.y) + Tw.z : Tw.z; 
+
+			// compute depth
+			float depth = (s.x * Tw.x + s.y * Tw.y) + Tw.z;
+			// if a point is too small, its depth is not reliable?
+			// depth = (rho3d <= rho2d) ? depth : Tw.z 
 			if (depth < near_n) continue;
+
 			float4 nor_o = collected_normal_opacity[j];
 			float normal[3] = {nor_o.x, nor_o.y, nor_o.z};
 			float opa = nor_o.w;
@@ -402,18 +416,7 @@ renderCUDA(
 			// Eq. (3) from 3D Gaussian splatting paper.
 			for (int ch = 0; ch < CHANNELS; ch++)
 				C[ch] += features[collected_id[j] * CHANNELS + ch] * w;
-			for (int ch = 0; ch < PBR_LEN; ch++)
-				F[ch] += pbr_params[collected_id[j] * PBR_LEN + ch] * w;
 			T = test_T;
-
-			if (calc < 20) ////////////////////
-			{
-                gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
-				weight_per_gs_pixel[calc * H * W + pix_id] = alpha * T; // 权重
-				x_mu[calc *2 * H * W + pix_id] = d.x; // 到 像素点的距离
-				x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
-			}
-			calc++;
 
 			// Keep track of last range entry to update this
 			// pixel.
@@ -439,7 +442,7 @@ renderCUDA(
 		for (int ch=0; ch<3; ch++) out_others[pix_id + (NORMAL_OFFSET+ch) * H * W] = N[ch];
 		out_others[pix_id + MIDDEPTH_OFFSET * H * W] = median_depth;
 		out_others[pix_id + DISTORTION_OFFSET * H * W] = distortion;
-		for (int ch=0; ch<PBR_LEN; ch++) out_others[pix_id + (PBR_OFFSET+ch) * H * W] = F[ch];
+		// out_others[pix_id + MEDIAN_WEIGHT_OFFSET * H * W] = median_weight;
 #endif
 	}
 }
@@ -452,7 +455,6 @@ void FORWARD::render(
 	float focal_x, float focal_y,
 	const float2* means2D,
 	const float* colors,
-	const float* pbr_params,
 	const float* transMats,
 	const float* depths,
 	const float4* normal_opacity,
@@ -460,10 +462,7 @@ void FORWARD::render(
 	uint32_t* n_contrib,
 	const float* bg_color,
 	float* out_color,
-	float* out_others,
-	float* gs_per_pixel,
-	float* weight_per_gs_pixel,
-	float* x_mu)
+	float* out_others)
 {
 	renderCUDA<NUM_CHANNELS> << <grid, block >> > (
 		ranges,
@@ -472,7 +471,6 @@ void FORWARD::render(
 		focal_x, focal_y,
 		means2D,
 		colors,
-		pbr_params,
 		transMats,
 		depths,
 		normal_opacity,
@@ -480,10 +478,7 @@ void FORWARD::render(
 		n_contrib,
 		bg_color,
 		out_color,
-		out_others,
-		gs_per_pixel,
-	    weight_per_gs_pixel,
-		x_mu);
+		out_others);
 }
 
 void FORWARD::preprocess(int P, int D, int M,

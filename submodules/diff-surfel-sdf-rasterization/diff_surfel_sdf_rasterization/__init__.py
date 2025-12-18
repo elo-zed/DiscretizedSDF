@@ -109,6 +109,7 @@ class _RasterizeGaussians(torch.autograd.Function):
             },
             save_path
         )
+        print("down datas!-- ",save_path)
         exit()
         # Keep relevant tensors for backward
         ctx.raster_settings = raster_settings

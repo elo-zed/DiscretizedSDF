@@ -98,7 +98,7 @@ RasterizeGaussiansCUDA(
   std::function<char*(size_t)> binningFunc = resizeFunctional(binningBuffer);
   std::function<char*(size_t)> imgFunc = resizeFunctional(imgBuffer);
 
-  torch::Tensor gs_per_pixel = torch::full({K, H, W}, -1.0, float_opts);
+  torch::Tensor gs_per_pixel = torch::full({K, H, W}, -1, int_opts);
   torch::Tensor weight_per_gs_pixel = torch::full({K, H, W}, 0.0, float_opts);
   torch::Tensor x_mu = torch::full({K, 2, H, W}, 0.0, float_opts);
   

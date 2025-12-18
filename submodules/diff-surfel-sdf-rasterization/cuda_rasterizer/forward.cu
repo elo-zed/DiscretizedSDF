@@ -261,7 +261,7 @@ renderCUDA(
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
 	float* __restrict__ out_others,
-	float* __restrict__ gs_per_pixel,
+	int* __restrict__ gs_per_pixel,
 	float* __restrict__ weight_per_gs_pixel,
 	float* __restrict__ x_mu)
 {
@@ -273,9 +273,9 @@ renderCUDA(
 	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	uint32_t pix_id = W * pix.y + pix.x;
 	float2 pixf = { (float)pix.x, (float)pix.y};
-	if (blockIdx.x == 0 && threadIdx.x == 0) {
-        printf("-----  renderCUDA -----\n");
-    }
+	// if (blockIdx.x == 0 && threadIdx.x == 0) {
+    //     printf("-----  renderCUDA -----\n");
+    // }
 	// Check if this thread is associated with a valid pixel or outside.
 	bool inside = pix.x < W&& pix.y < H;
 	// Done threads can help with fetching, but don't rasterize
@@ -463,7 +463,7 @@ void FORWARD::render(
 	const float* bg_color,
 	float* out_color,
 	float* out_others,
-	float* gs_per_pixel,
+	int* gs_per_pixel,
 	float* weight_per_gs_pixel,
 	float* x_mu)
 {

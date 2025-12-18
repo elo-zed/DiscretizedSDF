@@ -136,7 +136,7 @@ RasterizeGaussiansCUDA(
 		prefiltered,
 		out_color.contiguous().data<float>(),
 		out_others.contiguous().data<float>(),
-		gs_per_pixel.contiguous().data<float>(),
+		gs_per_pixel.contiguous().data<int>(),
 		weight_per_gs_pixel.contiguous().data<float>(),
 		x_mu.contiguous().data<float>(),
 		radii.contiguous().data<int>(),

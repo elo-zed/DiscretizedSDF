@@ -273,7 +273,9 @@ renderCUDA(
 	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	uint32_t pix_id = W * pix.y + pix.x;
 	float2 pixf = { (float)pix.x, (float)pix.y};
-	printf("renderCUDA-----\n");
+	if (blockIdx.x == 0 && threadIdx.x == 0) {
+        printf("-----  renderCUDA -----\n");
+    }
 	// Check if this thread is associated with a valid pixel or outside.
 	bool inside = pix.x < W&& pix.y < H;
 	// Done threads can help with fetching, but don't rasterize

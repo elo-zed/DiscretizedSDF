@@ -97,8 +97,6 @@ class _RasterizeGaussians(torch.autograd.Function):
 
         import os
         save_dir = "/kaggle/working/DiscretizedSDF/"
-        os.makedirs(save_dir, exist_ok=True)
-
         save_path = os.path.join(save_dir, "gs_debug_tensors.pt")
 
         torch.save(
@@ -110,7 +108,7 @@ class _RasterizeGaussians(torch.autograd.Function):
             save_path
         )
         print("down datas!-- ",save_path)
-        exit()
+        # exit()
         # Keep relevant tensors for backward
         ctx.raster_settings = raster_settings
         ctx.num_rendered = num_rendered

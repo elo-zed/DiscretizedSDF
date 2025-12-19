@@ -323,19 +323,19 @@ scale_to_mat(const glm::vec2 scale, const float glob_scale) {
     if (debug) { \
         cudaError_t ret = cudaGetLastError(); \
         if (ret != cudaSuccess) { \
-            std::cerr << "[CUDA PRE-LAUNCH ERROR] before " << #call << " at " << __FILE__ << ":" << __LINE__ \
+            std::cerr << "[CUDA PRE-LAUNCH ERROR] before " #call " at " << __FILE__ << ":" << __LINE__ \
                       << " : " << cudaGetErrorString(ret) << std::endl; \
         } \
         call; \
         ret = cudaGetLastError(); \
         if (ret != cudaSuccess) { \
-            std::cerr << "[CUDA LAUNCH ERROR] after " << #call << " at " << __FILE__ << ":" << __LINE__ \
+            std::cerr << "[CUDA ERROR] after " #call " at " << __FILE__ << ":" << __LINE__ \
                       << " : " << cudaGetErrorString(ret) << std::endl; \
             throw std::runtime_error(cudaGetErrorString(ret)); \
         } \
         ret = cudaDeviceSynchronize(); \
         if (ret != cudaSuccess) { \
-            std::cerr << "[CUDA RUNTIME ERROR] at " << __FILE__ << ":" << __LINE__ \
+            std::cerr << "[CUDA RUNTIME ERROR] after " #call " at " << __FILE__ << ":" << __LINE__ \
                       << " : " << cudaGetErrorString(ret) << std::endl; \
             throw std::runtime_error(cudaGetErrorString(ret)); \
         } \

@@ -349,7 +349,7 @@ int CudaRasterizer::Rasterizer::forward(
 		out_others,
 		gs_per_pixel,
 		weight_per_gs_pixel,
-		x_mu))//, true) //debug
+		x_mu));//, true) //debug
 
 	return num_rendered;
 }

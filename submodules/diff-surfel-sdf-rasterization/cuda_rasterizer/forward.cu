@@ -419,13 +419,13 @@ renderCUDA(
 			if (xxxid == 0 && pix_id==0) {
 				printf("-----  calc renderCUDA -----\n");
 			}
-			if (calc < 20) ////////////////////
-			{
-                gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
-				weight_per_gs_pixel[calc * H * W + pix_id] = alpha * T; // 权重
-				x_mu[calc *2 * H * W + pix_id] = d.x; // 到 像素点的距离
-				x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
-			}
+			// if (calc < 20) ////////////////////
+			// {
+            //     gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
+			// 	weight_per_gs_pixel[calc * H * W + pix_id] = alpha * T; // 权重
+			// 	x_mu[calc *2 * H * W + pix_id] = d.x; // 到 像素点的距离
+			// 	x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
+			// }
 			calc++;
 			if (xxxid == 0 && pix_id==0) {
 				printf("-----  end renderCUDA -----\n");

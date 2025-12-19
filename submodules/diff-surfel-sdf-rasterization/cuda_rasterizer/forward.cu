@@ -275,12 +275,7 @@ renderCUDA(
 	uint32_t calc = 0;
 	float2 pixf = { (float)pix.x, (float)pix.y};
 	int xxxid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (xxxid == 0 && pix_id==0) {
-        printf("-----  renderCUDA -----\n");
-    }
-	// if (blockIdx.x == 0 && threadIdx.x == 0) {
-    //     printf("-----  renderCUDA -----\n");
-    // }
+	////////
 	// Check if this thread is associated with a valid pixel or outside.
 	bool inside = pix.x < W&& pix.y < H;
 	// Done threads can help with fetching, but don't rasterize
@@ -317,7 +312,9 @@ renderCUDA(
 	float median_contributor = {-1};
 
 #endif
-
+	if (xxxid == 0 && pix_id==0) {
+        printf("-----  renderCUDA -----\n");
+    }
 	// Iterate over batches until all done or range is complete
 	for (int i = 0; i < rounds; i++, toDo -= BLOCK_SIZE)
 	{
@@ -339,7 +336,9 @@ renderCUDA(
 			collected_Tw[block.thread_rank()] = {transMats[9 * coll_id+6], transMats[9 * coll_id+7], transMats[9 * coll_id+8]};
 		}
 		block.sync();
-		
+		if (xxxid == 0 && pix_id==0) {
+			printf("-----  1renderCUDA -----\n");
+		}
 		// Iterate over current batch
 		for (int j = 0; !done && j < min(BLOCK_SIZE, toDo); j++)
 		{
@@ -371,7 +370,9 @@ renderCUDA(
 			float power = -0.5f * rho;
 			if (power > 0.0f)
 				continue;
-
+			if (xxxid == 0 && pix_id==0) {
+				printf("-----  21renderCUDA -----\n");
+			}
 			// Eq. (2) from 3D Gaussian splatting paper.
 			// Obtain alpha by multiplying with Gaussian opacity
 			// and its exponential falloff from mean.
@@ -396,7 +397,9 @@ renderCUDA(
 			D  += depth * w;
 			M1 += m * w;
 			M2 += m * m * w;
-
+			if (xxxid == 0 && pix_id==0) {
+				printf("-----  3renderCUDA -----\n");
+			}
 			if (T > 0.5) {
 				median_depth = depth;
 				// median_weight = w;

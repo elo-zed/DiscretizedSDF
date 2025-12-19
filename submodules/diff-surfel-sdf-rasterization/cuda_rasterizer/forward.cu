@@ -273,10 +273,10 @@ renderCUDA(
 	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	uint32_t pix_id = W * pix.y + pix.x;
 	float2 pixf = { (float)pix.x, (float)pix.y};
-	// int id = blockIdx.x * blockDim.x + threadIdx.x;
-	// if (id == 0) {
-    //     printf("Hello from CUDA! id = %d\n", id);
-    // }
+	int xxxid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (xxxid == 0) {
+        printf("-----  renderCUDA -----\n");
+    }
 	// if (blockIdx.x == 0 && threadIdx.x == 0) {
     //     printf("-----  renderCUDA -----\n");
     // }
@@ -412,6 +412,9 @@ renderCUDA(
 				F[ch] += pbr_params[collected_id[j] * PBR_LEN + ch] * w;
 			T = test_T;
 
+			if (xxxid == 0) {
+				printf("-----  calc renderCUDA -----\n");
+			}
 			if (calc < 20) ////////////////////
 			{
                 gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
@@ -420,7 +423,9 @@ renderCUDA(
 				x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
 			}
 			calc++;
-
+			if (xxxid == 0) {
+				printf("-----  end renderCUDA -----\n");
+			}
 			// Keep track of last range entry to update this
 			// pixel.
 			last_contributor = contributor;

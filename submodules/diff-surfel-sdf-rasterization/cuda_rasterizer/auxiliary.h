@@ -293,14 +293,14 @@ scale_to_mat(const glm::vec2 scale, const float glob_scale) {
 
 
 
-// #define CHECK_CUDA(A, debug) \
-// A; if(debug) { \
-// auto ret = cudaDeviceSynchronize(); \
-// if (ret != cudaSuccess) { \
-// std::cerr << "\n[CUDA ERROR] in " << __FILE__ << "\nLine " << __LINE__ << ": " << cudaGetErrorString(ret); \
-// throw std::runtime_error(cudaGetErrorString(ret)); \
-// } \
-// }
+#define CHECK_CUDA(A, debug) \
+A; if(debug) { \
+auto ret = cudaDeviceSynchronize(); \
+if (ret != cudaSuccess) { \
+std::cerr << "\n[CUDA ERROR] in " << __FILE__ << "\nLine " << __LINE__ << ": " << cudaGetErrorString(ret); \
+throw std::runtime_error(cudaGetErrorString(ret)); \
+} \
+}
 
 // #define CHECK_CUDA(A, debug) \
 // A; \
@@ -319,28 +319,19 @@ scale_to_mat(const glm::vec2 scale, const float glob_scale) {
 // 	} \
 // } \
 
-#define CHECK_CUDA(call, debug) do { \
-    if (debug) { \
-        cudaError_t ret = cudaGetLastError(); \
-        if (ret != cudaSuccess) { \
-            std::cerr << "[CUDA PRE-LAUNCH ERROR] before " #call " at " << __FILE__ << ":" << __LINE__ \
-                      << " : " << cudaGetErrorString(ret) << std::endl; \
-        } \
-        call; \
-        ret = cudaGetLastError(); \
-        if (ret != cudaSuccess) { \
-            std::cerr << "[CUDA ERROR] after " #call " at " << __FILE__ << ":" << __LINE__ \
-                      << " : " << cudaGetErrorString(ret) << std::endl; \
-            throw std::runtime_error(cudaGetErrorString(ret)); \
-        } \
-        ret = cudaDeviceSynchronize(); \
-        if (ret != cudaSuccess) { \
-            std::cerr << "[CUDA RUNTIME ERROR] after " #call " at " << __FILE__ << ":" << __LINE__ \
-                      << " : " << cudaGetErrorString(ret) << std::endl; \
-            throw std::runtime_error(cudaGetErrorString(ret)); \
-        } \
-    } else { \
-        call; \
+#define CHECK_KERNEL(kernel_call) do { \
+    kernel_call; \
+    cudaError_t err = cudaGetLastError(); \
+    if (err != cudaSuccess) { \
+        fprintf(stderr, "[KERNEL LAUNCH ERROR] %s at %s:%d: %s\n", \
+                #kernel_call, __FILE__, __LINE__, cudaGetErrorString(err)); \
+        exit(EXIT_FAILURE); \
+    } \
+    err = cudaDeviceSynchronize(); \
+    if (err != cudaSuccess) { \
+        fprintf(stderr, "[KERNEL RUNTIME ERROR] at %s:%d: %s\n", \
+                __FILE__, __LINE__, cudaGetErrorString(err)); \
+        exit(EXIT_FAILURE); \
     } \
 } while(0)
 

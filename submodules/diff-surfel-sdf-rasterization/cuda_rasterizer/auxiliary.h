@@ -302,23 +302,23 @@ scale_to_mat(const glm::vec2 scale, const float glob_scale) {
 // } \
 // }
 
-#define CHECK_CUDA(A, debug) do { \
-    A; \
-    if (debug) { \
-        auto err = cudaGetLastError(); \
-        if (err != cudaSuccess) { \
-            std::cerr << "[CUDA LAUNCH ERROR] " \
-                      << cudaGetErrorString(err) << std::endl; \
-            throw std::runtime_error(cudaGetErrorString(err)); \
-        } \
-        err = cudaDeviceSynchronize(); \
-        if (err != cudaSuccess) { \
-            std::cerr << "[CUDA RUNTIME ERROR] " \
-                      << cudaGetErrorString(err) << std::endl; \
-            throw std::runtime_error(cudaGetErrorString(err)); \
-        } \
-    } \
-} while(0)
+#define CHECK_CUDA(A, debug) \
+A; \
+if (debug) { \
+	auto err = cudaGetLastError(); \
+	if (err != cudaSuccess) { \
+		std::cerr << "[CUDA LAUNCH ERROR] " \
+					<< cudaGetErrorString(err) << std::endl; \
+		throw std::runtime_error(cudaGetErrorString(err)); \
+	} \
+	err = cudaDeviceSynchronize(); \
+	if (err != cudaSuccess) { \
+		std::cerr << "[CUDA RUNTIME ERROR] " \
+					<< cudaGetErrorString(err) << std::endl; \
+		throw std::runtime_error(cudaGetErrorString(err)); \
+	} \
+} \
+
 
 
 

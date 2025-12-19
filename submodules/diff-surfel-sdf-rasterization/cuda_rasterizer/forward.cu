@@ -275,7 +275,7 @@ renderCUDA(
 	uint32_t calc = 0;
 	float2 pixf = { (float)pix.x, (float)pix.y};
 	int xxxid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (xxxid == 0) {
+	if (xxxid == 0 && pix_id==0) {
         printf("-----  renderCUDA -----\n");
     }
 	// if (blockIdx.x == 0 && threadIdx.x == 0) {
@@ -413,7 +413,7 @@ renderCUDA(
 				F[ch] += pbr_params[collected_id[j] * PBR_LEN + ch] * w;
 			T = test_T;
 
-			if (xxxid == 0) {
+			if (xxxid == 0 && pix_id==0) {
 				printf("-----  calc renderCUDA -----\n");
 			}
 			if (calc < 20) ////////////////////
@@ -424,7 +424,7 @@ renderCUDA(
 				x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
 			}
 			calc++;
-			if (xxxid == 0) {
+			if (xxxid == 0 && pix_id==0) {
 				printf("-----  end renderCUDA -----\n");
 			}
 			// Keep track of last range entry to update this

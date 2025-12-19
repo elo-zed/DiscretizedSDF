@@ -325,7 +325,7 @@ int CudaRasterizer::Rasterizer::forward(
 	CHECK_CUDA(, debug)
 
 	printf("------- start render ----\n");
-    debug = true;
+    // debug = true;
 	
 	// Let each tile blend its range of Gaussians independently in parallel
 	const float* feature_ptr = colors_precomp != nullptr ? colors_precomp : geomState.rgb;
@@ -349,7 +349,7 @@ int CudaRasterizer::Rasterizer::forward(
 		out_others,
 		gs_per_pixel,
 		weight_per_gs_pixel,
-		x_mu), debug)
+		x_mu), true) //debug
 
 	return num_rendered;
 }

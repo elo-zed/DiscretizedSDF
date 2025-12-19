@@ -142,6 +142,7 @@ def defer_render(viewpoint_camera, scene, pipe, bg_color : torch.Tensor,
             "x_mu": x_mu.detach().cpu(),
         }
     # gs gt normal
+    pc.use_sdf = False
     gt_normal_gs = pc.get_normal()
     print("gt_normal_gs:",gt_normal_gs.shape)
     # gt normal

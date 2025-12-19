@@ -408,6 +408,9 @@ renderCUDA(
 			if (calc < 20) 
 			{
 				gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
+				weight_per_gs_pixel[calc * H * W + pix_id] = alpha * T; // 权重
+				x_mu[calc *2 * H * W + pix_id] = d.x; // 到 像素点的距离
+				x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
 			}
 			calc++;
 			// Keep track of last range entry to update this

@@ -386,7 +386,9 @@ renderCUDA(
 				done = true;
 				continue;
 			}
-
+			if (xxxid == 0 && pix_id==0) {
+				printf("-----  22renderCUDA -----\n");
+			}
 			float w = alpha * T;
 #if RENDER_AXUTILITY
 			// Render depth distortion map

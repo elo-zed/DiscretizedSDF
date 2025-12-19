@@ -123,7 +123,7 @@ def defer_render(viewpoint_camera, scene, pipe, bg_color : torch.Tensor,
     render_extras = torch.cat(render_extras, -1)
     
     out_extras = {}
-    print("---"*10," start ","---"*10) # ,gs_per_pixel, weight_per_gs_pixel, x_mu 
+    # print("---"*10," start ","---"*10) # ,gs_per_pixel, weight_per_gs_pixel, x_mu 
     out_extras['pos'], radii, allmap = rasterizer(
         means3D = means3D,
         means2D = means2D,

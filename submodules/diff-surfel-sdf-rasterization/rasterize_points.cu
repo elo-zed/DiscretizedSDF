@@ -68,6 +68,8 @@ RasterizeGaussiansCUDA(
   const int P = means3D.size(0);
   const int H = image_height;
   const int W = image_width;
+  
+  const int K = 20; ////////////////////////////
 
   CHECK_INPUT(background);
   CHECK_INPUT(means3D);
@@ -88,6 +90,10 @@ RasterizeGaussiansCUDA(
   torch::Tensor out_others = torch::full({3+3+1+PBR_LEN, H, W}, 0.0, float_opts);
   torch::Tensor radii = torch::full({P}, 0, means3D.options().dtype(torch::kInt32));
   
+  torch::Tensor gs_per_pixel = torch::full({K, H, W}, -1, int_opts);
+  torch::Tensor weight_per_gs_pixel = torch::full({K, H, W}, 0.0, float_opts);
+  torch::Tensor x_mu = torch::full({K, 2, H, W}, 0.0, float_opts);
+
   torch::Device device(torch::kCUDA);
   torch::TensorOptions options(torch::kByte);
   torch::Tensor geomBuffer = torch::empty({0}, options.device(device));
@@ -130,6 +136,11 @@ RasterizeGaussiansCUDA(
 		prefiltered,
 		out_color.contiguous().data<float>(),
 		out_others.contiguous().data<float>(),
+
+		gs_per_pixel.contiguous().data<int>(),
+		weight_per_gs_pixel.contiguous().data<float>(),
+		x_mu.contiguous().data<float>(),
+		
 		radii.contiguous().data<int>(),
 		debug);
   }

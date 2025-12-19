@@ -135,12 +135,37 @@ def defer_render(viewpoint_camera, scene, pipe, bg_color : torch.Tensor,
         pbr_params = render_extras,
         cov3D_precomp = cov3D_precomp)
     
+    out_pixel = {}
+    out_pixel['out_data'] = {
+            "gs_per_pixel": gs_per_pixel.detach().cpu(),
+            "weight_per_gs_pixel": weight_per_gs_pixel.detach().cpu(),
+            "x_mu": x_mu.detach().cpu(),
+        }
+    # gs gt normal
+    gt_normal_gs = pc.get_normal()
+    print("gt_normal_gs:",gt_normal_gs.shape)
+    # gt normal
+    gt_normal = viewpoint_camera.original_normal_image
+    print("gt_normal:",gt_normal.shape)
+    
+    # submodules\diff-surfel-sdf-rasterization\rasterize_points.cu L90
+    out_extras["alpha"] = alpha = allmap[1:2]
+
+    # get normal map
+    # transform normal from view space to world space
+    normal = allmap[2:5]
+    normal = (normal.permute(1,2,0) @ (viewpoint_camera.world_view_transform[:3,:3].T)).permute(2,0,1)
+    out_extras['normal'] = normal * alpha.detach()
+
     import os
     save_dir = "/kaggle/working/DiscretizedSDF/"
     save_path = os.path.join(save_dir, "gs_debug_tensors.pt")
 
     torch.save(
         {
+            "gt_normal_gs": gt_normal_gs.detach().cpu(),
+            "gt_normal": gt_normal.detach().cpu(),
+            "pred_normal": out_extras['normal'].detach().cpu(),
             "gs_per_pixel": gs_per_pixel.detach().cpu(),
             "weight_per_gs_pixel": weight_per_gs_pixel.detach().cpu(),
             "x_mu": x_mu.detach().cpu(),
@@ -150,13 +175,6 @@ def defer_render(viewpoint_camera, scene, pipe, bg_color : torch.Tensor,
     print("down datas!-- ",save_path)
     exit()
 
-    out_extras["alpha"] = alpha = allmap[1:2]
-
-    # get normal map
-    # transform normal from view space to world space
-    normal = allmap[2:5]
-    normal = (normal.permute(1,2,0) @ (viewpoint_camera.world_view_transform[:3,:3].T)).permute(2,0,1)
-    out_extras['normal'] = normal * alpha.detach()
     
     # get expected depth map
     depth_expected = allmap[0:1]

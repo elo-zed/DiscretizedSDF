@@ -302,22 +302,47 @@ scale_to_mat(const glm::vec2 scale, const float glob_scale) {
 // } \
 // }
 
-#define CHECK_CUDA(A, debug) \
-A; \
-if (debug) { \
-	auto err = cudaGetLastError(); \
-	if (err != cudaSuccess) { \
-		std::cerr << "[CUDA LAUNCH ERROR] " \
-					<< cudaGetErrorString(err) << std::endl; \
-		throw std::runtime_error(cudaGetErrorString(err)); \
-	} \
-	err = cudaDeviceSynchronize(); \
-	if (err != cudaSuccess) { \
-		std::cerr << "[CUDA RUNTIME ERROR] " \
-					<< cudaGetErrorString(err) << std::endl; \
-		throw std::runtime_error(cudaGetErrorString(err)); \
-	} \
-} \
+// #define CHECK_CUDA(A, debug) \
+// A; \
+// if (debug) { \
+// 	auto err = cudaGetLastError(); \
+// 	if (err != cudaSuccess) { \
+// 		std::cerr << "[CUDA LAUNCH ERROR] " \
+// 					<< cudaGetErrorString(err) << std::endl; \
+// 		throw std::runtime_error(cudaGetErrorString(err)); \
+// 	} \
+// 	err = cudaDeviceSynchronize(); \
+// 	if (err != cudaSuccess) { \
+// 		std::cerr << "[CUDA RUNTIME ERROR] " \
+// 					<< cudaGetErrorString(err) << std::endl; \
+// 		throw std::runtime_error(cudaGetErrorString(err)); \
+// 	} \
+// } \
+
+#define CHECK_CUDA(call, debug) do { \
+    if (debug) { \
+        cudaError_t ret = cudaGetLastError(); \
+        if (ret != cudaSuccess) { \
+            std::cerr << "[CUDA PRE-LAUNCH ERROR] before " << #call << " at " << __FILE__ << ":" << __LINE__ \
+                      << " : " << cudaGetErrorString(ret) << std::endl; \
+        } \
+        call; \
+        ret = cudaGetLastError(); \
+        if (ret != cudaSuccess) { \
+            std::cerr << "[CUDA LAUNCH ERROR] after " << #call << " at " << __FILE__ << ":" << __LINE__ \
+                      << " : " << cudaGetErrorString(ret) << std::endl; \
+            throw std::runtime_error(cudaGetErrorString(ret)); \
+        } \
+        ret = cudaDeviceSynchronize(); \
+        if (ret != cudaSuccess) { \
+            std::cerr << "[CUDA RUNTIME ERROR] at " << __FILE__ << ":" << __LINE__ \
+                      << " : " << cudaGetErrorString(ret) << std::endl; \
+            throw std::runtime_error(cudaGetErrorString(ret)); \
+        } \
+    } else { \
+        call; \
+    } \
+} while(0)
 
 
 

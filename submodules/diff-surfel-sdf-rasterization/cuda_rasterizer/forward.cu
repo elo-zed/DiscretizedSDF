@@ -272,7 +272,7 @@ renderCUDA(
 	uint2 pix_max = { min(pix_min.x + BLOCK_X, W), min(pix_min.y + BLOCK_Y , H) };
 	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	uint32_t pix_id = W * pix.y + pix.x;
-	uint32_t calc = 0;
+	// uint32_t calc = 0;
 	float2 pixf = { (float)pix.x, (float)pix.y};
 	int xxxid = blockIdx.x * blockDim.x + threadIdx.x;
 	////////
@@ -426,7 +426,7 @@ renderCUDA(
 			// 	x_mu[calc *2 * H * W + pix_id] = d.x; // 到 像素点的距离
 			// 	x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
 			// }
-			calc++;
+			// calc++;
 			if (xxxid == 0 && pix_id==0) {
 				printf("-----  end renderCUDA -----\n");
 			}

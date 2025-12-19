@@ -310,7 +310,7 @@ renderCUDA(
 	float median_contributor = {-1};
 
 #endif
-
+	uint32_t calc = 0;
 	// Iterate over batches until all done or range is complete
 	for (int i = 0; i < rounds; i++, toDo -= BLOCK_SIZE)
 	{
@@ -405,7 +405,11 @@ renderCUDA(
 			for (int ch = 0; ch < PBR_LEN; ch++)
 				F[ch] += pbr_params[collected_id[j] * PBR_LEN + ch] * w;
 			T = test_T;
-
+			if (calc < 20) 
+			{
+				gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
+			}
+			calc++;
 			// Keep track of last range entry to update this
 			// pixel.
 			last_contributor = contributor;

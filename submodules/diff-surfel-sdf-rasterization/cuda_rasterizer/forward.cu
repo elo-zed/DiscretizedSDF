@@ -260,7 +260,10 @@ renderCUDA(
 	uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
-	float* __restrict__ out_others)
+	float* __restrict__ out_others,
+	int* __restrict__ gs_per_pixel,
+	float* __restrict__ weight_per_gs_pixel,
+	float* __restrict__ x_mu)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -448,7 +451,10 @@ void FORWARD::render(
 	uint32_t* n_contrib,
 	const float* bg_color,
 	float* out_color,
-	float* out_others)
+	float* out_others,
+	int* gs_per_pixel,
+	float* weight_per_gs_pixel,
+	float* x_mu)
 {
 	renderCUDA<NUM_CHANNELS> << <grid, block >> > (
 		ranges,
@@ -465,7 +471,10 @@ void FORWARD::render(
 		n_contrib,
 		bg_color,
 		out_color,
-		out_others);
+		out_others,
+		gs_per_pixel,
+	    weight_per_gs_pixel,
+		x_mu);
 }
 
 void FORWARD::preprocess(int P, int D, int M,

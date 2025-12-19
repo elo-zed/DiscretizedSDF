@@ -37,7 +37,7 @@ std::function<char*(size_t N)> resizeFunctional(torch::Tensor& t) {
 	return lambda;
 }
 
-std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
+std::tuple<int, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>
 RasterizeGaussiansCUDA(
 	const torch::Tensor& background,
 	const torch::Tensor& means3D,
@@ -68,7 +68,6 @@ RasterizeGaussiansCUDA(
   const int P = means3D.size(0);
   const int H = image_height;
   const int W = image_width;
-  const int K = 20; ////////////////////////////
 
   CHECK_INPUT(background);
   CHECK_INPUT(means3D);
@@ -97,12 +96,7 @@ RasterizeGaussiansCUDA(
   std::function<char*(size_t)> geomFunc = resizeFunctional(geomBuffer);
   std::function<char*(size_t)> binningFunc = resizeFunctional(binningBuffer);
   std::function<char*(size_t)> imgFunc = resizeFunctional(imgBuffer);
-
-  torch::Tensor gs_per_pixel = torch::full({K, H, W}, -1, int_opts);
-  torch::Tensor weight_per_gs_pixel = torch::full({K, H, W}, 0.0, float_opts);
-  torch::Tensor x_mu = torch::full({K, 2, H, W}, 0.0, float_opts);
   
-  printf("--------- RasterizeGaussiansCUDA ---------\n");
   int rendered = 0;
   if(P != 0)
   {
@@ -136,13 +130,10 @@ RasterizeGaussiansCUDA(
 		prefiltered,
 		out_color.contiguous().data<float>(),
 		out_others.contiguous().data<float>(),
-		gs_per_pixel.contiguous().data<int>(),
-		weight_per_gs_pixel.contiguous().data<float>(),
-		x_mu.contiguous().data<float>(),
 		radii.contiguous().data<int>(),
 		debug);
   }
-  return std::make_tuple(rendered, out_color, out_others, radii, geomBuffer, binningBuffer, imgBuffer, gs_per_pixel, weight_per_gs_pixel, x_mu);
+  return std::make_tuple(rendered, out_color, out_others, radii, geomBuffer, binningBuffer, imgBuffer);
 }
 
 std::tuple<torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor, torch::Tensor>

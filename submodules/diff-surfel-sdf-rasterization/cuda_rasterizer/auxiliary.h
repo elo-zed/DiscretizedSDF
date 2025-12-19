@@ -302,40 +302,4 @@ throw std::runtime_error(cudaGetErrorString(ret)); \
 } \
 }
 
-// #define CHECK_CUDA(A, debug) \
-// A; \
-// if (debug) { \
-// 	auto err = cudaGetLastError(); \
-// 	if (err != cudaSuccess) { \
-// 		std::cerr << "[CUDA LAUNCH ERROR] " \
-// 					<< cudaGetErrorString(err) << std::endl; \
-// 		throw std::runtime_error(cudaGetErrorString(err)); \
-// 	} \
-// 	err = cudaDeviceSynchronize(); \
-// 	if (err != cudaSuccess) { \
-// 		std::cerr << "[CUDA RUNTIME ERROR] " \
-// 					<< cudaGetErrorString(err) << std::endl; \
-// 		throw std::runtime_error(cudaGetErrorString(err)); \
-// 	} \
-// } \
-
-#define CHECK_KERNEL(kernel_call) do { \
-    kernel_call; \
-    cudaError_t err = cudaGetLastError(); \
-    if (err != cudaSuccess) { \
-        fprintf(stderr, "[KERNEL LAUNCH ERROR] %s at %s:%d: %s\n", \
-                #kernel_call, __FILE__, __LINE__, cudaGetErrorString(err)); \
-        exit(EXIT_FAILURE); \
-    } \
-    err = cudaDeviceSynchronize(); \
-    if (err != cudaSuccess) { \
-        fprintf(stderr, "[KERNEL RUNTIME ERROR] at %s:%d: %s\n", \
-                __FILE__, __LINE__, cudaGetErrorString(err)); \
-        exit(EXIT_FAILURE); \
-    } \
-} while(0)
-
-
-
-
 #endif

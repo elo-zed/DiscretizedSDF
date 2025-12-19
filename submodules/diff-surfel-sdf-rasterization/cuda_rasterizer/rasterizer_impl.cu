@@ -218,16 +218,11 @@ int CudaRasterizer::Rasterizer::forward(
 	const bool prefiltered,
 	float* out_color,
 	float* out_others,
-	int* gs_per_pixel,
-	float* weight_per_gs_pixel,
-	float* x_mu,
 	int* radii,
 	bool debug)
 {
 	const float focal_y = height / (2.0f * tan_fovy);
 	const float focal_x = width / (2.0f * tan_fovx);
-
-	printf("------ forward --------\n");
 
 	size_t chunk_size = required<GeometryState>(P);
 	char* chunkptr = geometryBuffer(chunk_size);
@@ -324,13 +319,10 @@ int CudaRasterizer::Rasterizer::forward(
 			imgState.ranges);
 	CHECK_CUDA(, debug)
 
-	printf("------- start render ----\n");
-    // debug = true;
-	
 	// Let each tile blend its range of Gaussians independently in parallel
 	const float* feature_ptr = colors_precomp != nullptr ? colors_precomp : geomState.rgb;
 	const float* transMat_ptr = transMat_precomp != nullptr ? transMat_precomp : geomState.transMat;
-	CHECK_CUDA(FORWARD::render( // CHECK_KERNEL CHECK_CUDA
+	CHECK_CUDA(FORWARD::render(
 		tile_grid, block,
 		imgState.ranges, 
 		binningState.point_list,
@@ -346,10 +338,7 @@ int CudaRasterizer::Rasterizer::forward(
 		imgState.n_contrib,
 		background,
 		out_color,
-		out_others,
-		gs_per_pixel,
-		weight_per_gs_pixel,
-		x_mu), debug) //debug
+		out_others), debug)
 
 	return num_rendered;
 }

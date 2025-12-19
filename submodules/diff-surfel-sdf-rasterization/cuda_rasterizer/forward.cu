@@ -260,10 +260,7 @@ renderCUDA(
 	uint32_t* __restrict__ n_contrib,
 	const float* __restrict__ bg_color,
 	float* __restrict__ out_color,
-	float* __restrict__ out_others,
-	int* __restrict__ gs_per_pixel,
-	float* __restrict__ weight_per_gs_pixel,
-	float* __restrict__ x_mu)
+	float* __restrict__ out_others)
 {
 	// Identify current tile and associated min/max pixel range.
 	auto block = cg::this_thread_block();
@@ -272,15 +269,13 @@ renderCUDA(
 	uint2 pix_max = { min(pix_min.x + BLOCK_X, W), min(pix_min.y + BLOCK_Y , H) };
 	uint2 pix = { pix_min.x + block.thread_index().x, pix_min.y + block.thread_index().y };
 	uint32_t pix_id = W * pix.y + pix.x;
-	// uint32_t calc = 0;
 	float2 pixf = { (float)pix.x, (float)pix.y};
-	int xxxid = blockIdx.x * blockDim.x + threadIdx.x;
-	////////
+
 	// Check if this thread is associated with a valid pixel or outside.
 	bool inside = pix.x < W&& pix.y < H;
 	// Done threads can help with fetching, but don't rasterize
 	bool done = !inside;
-	
+
 	// Load start/end range of IDs to process in bit sorted list.
 	uint2 range = ranges[block.group_index().y * horizontal_blocks + block.group_index().x];
 	const int rounds = ((range.y - range.x + BLOCK_SIZE - 1) / BLOCK_SIZE);
@@ -312,9 +307,7 @@ renderCUDA(
 	float median_contributor = {-1};
 
 #endif
-	if (xxxid == 0 && pix_id==0) {
-        printf("-----  renderCUDA -----\n");
-    }
+
 	// Iterate over batches until all done or range is complete
 	for (int i = 0; i < rounds; i++, toDo -= BLOCK_SIZE)
 	{
@@ -336,9 +329,7 @@ renderCUDA(
 			collected_Tw[block.thread_rank()] = {transMats[9 * coll_id+6], transMats[9 * coll_id+7], transMats[9 * coll_id+8]};
 		}
 		block.sync();
-		if (xxxid == 0 && pix_id==0) {
-			printf("-----  1renderCUDA -----\n");
-		}
+
 		// Iterate over current batch
 		for (int j = 0; !done && j < min(BLOCK_SIZE, toDo); j++)
 		{
@@ -370,9 +361,7 @@ renderCUDA(
 			float power = -0.5f * rho;
 			if (power > 0.0f)
 				continue;
-			if (xxxid == 0 && pix_id==0) {
-				printf("-----  21renderCUDA -----\n");
-			}
+
 			// Eq. (2) from 3D Gaussian splatting paper.
 			// Obtain alpha by multiplying with Gaussian opacity
 			// and its exponential falloff from mean.
@@ -386,9 +375,7 @@ renderCUDA(
 				done = true;
 				continue;
 			}
-			if (xxxid == 0 && pix_id==0) {
-				printf("-----  22renderCUDA -----\n");
-			}
+
 			float w = alpha * T;
 #if RENDER_AXUTILITY
 			// Render depth distortion map
@@ -399,9 +386,7 @@ renderCUDA(
 			D  += depth * w;
 			M1 += m * w;
 			M2 += m * m * w;
-			if (xxxid == 0 && pix_id==0) {
-				printf("-----  3renderCUDA -----\n");
-			}
+
 			if (T > 0.5) {
 				median_depth = depth;
 				// median_weight = w;
@@ -418,20 +403,6 @@ renderCUDA(
 				F[ch] += pbr_params[collected_id[j] * PBR_LEN + ch] * w;
 			T = test_T;
 
-			if (xxxid == 0 && pix_id==0) {
-				printf("-----  calc renderCUDA -----\n");
-			}
-			// if (calc < 20) ////////////////////
-			// {
-            //     gs_per_pixel[calc * H * W + pix_id] = collected_id[j]; // gs id
-			// 	weight_per_gs_pixel[calc * H * W + pix_id] = alpha * T; // 权重
-			// 	x_mu[calc *2 * H * W + pix_id] = d.x; // 到 像素点的距离
-			// 	x_mu[(calc * 2 + 1) * H * W + pix_id] = d.y; // 到像素点的距离
-			// }
-			// calc++;
-			if (xxxid == 0 && pix_id==0) {
-				printf("-----  end renderCUDA -----\n");
-			}
 			// Keep track of last range entry to update this
 			// pixel.
 			last_contributor = contributor;
@@ -477,10 +448,7 @@ void FORWARD::render(
 	uint32_t* n_contrib,
 	const float* bg_color,
 	float* out_color,
-	float* out_others,
-	int* gs_per_pixel,
-	float* weight_per_gs_pixel,
-	float* x_mu)
+	float* out_others)
 {
 	renderCUDA<NUM_CHANNELS> << <grid, block >> > (
 		ranges,
@@ -497,10 +465,7 @@ void FORWARD::render(
 		n_contrib,
 		bg_color,
 		out_color,
-		out_others,
-		gs_per_pixel,
-	    weight_per_gs_pixel,
-		x_mu);
+		out_others);
 }
 
 void FORWARD::preprocess(int P, int D, int M,
